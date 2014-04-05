@@ -38,32 +38,63 @@ class TestQueryBuilder(unittest.TestCase):
 
     def testSelectAB(self):
         query = self.builder.select(['fa', 'fb'])
-        self.assertEquals(query, 'select a.f fa, b.f fb from table_a a join table_b b on a.id = b.id')
+        self.assertEquals(query, '''
+            select a.f fa, b.f fb 
+            from table_a a 
+            join table_b b on a.id = b.id''')
 
     def testSelectAC(self):
         query = self.builder.select(['fa', 'fc'])
-        self.assertEquals(query, 'select a.f fa, c.f fc from table_a a join table_c c on a.id = c.id')
+        self.assertEquals(query, '''
+            select a.f fa, c.f fc 
+            from table_a a 
+            join table_c c on a.id = c.id''')
 
     def testSelectAD(self):
         query = self.builder.select(['fa', 'fd'])
-        self.assertEquals(query, 'select a.f fa, d.f fd from table_a a join table_c c on a.id = c.id join table_d d on c.id = d.id')
+        self.assertEquals(query, '''
+            select a.f fa, d.f fd 
+            from table_a a 
+            join table_c c on a.id = c.id 
+            join table_d d on c.id = d.id''')
 
     def testSelectBC(self):
         query = self.builder.select(['fb', 'fc'])
-        self.assertEquals(query, 'select b.f fb, c.f fc from table_a a join table_b b on a.id = b.id join table_c c on a.id = c.id')
+        self.assertEquals(query, '''
+            select b.f fb, c.f fc 
+            from table_a a 
+            join table_b b on a.id = b.id 
+            join table_c c on a.id = c.id''')
 
     def testSelectBD(self):
         query = self.builder.select(['fb', 'fd'])
-        self.assertEquals(query, 'select b.f fb, d.f fd from table_a a join table_b b on a.id = b.id join table_c c on a.id = c.id join table_d d on c.id = d.id')
+        self.assertEquals(query, '''
+            select b.f fb, d.f fd 
+            from table_a a 
+            join table_b b on a.id = b.id 
+            join table_c c on a.id = c.id 
+            join table_d d on c.id = d.id''')
 
     def testSelectCD(self):
         query = self.builder.select(['fc', 'fd'])
-        self.assertEquals(query, 'select c.f fc, d.f fd from table_c c on a.id = c.id join table_d d on c.id = d.id')
+        self.assertEquals(query, '''
+            select c.f fc, d.f fd 
+            from table_c c 
+            join table_d d on c.id = d.id''')
 
     def testSelectABC(self):
         query = self.builder.select(['fa', 'fb', 'fc'])
-        self.assertEquals(query, 'select a.f fa, b.f fb, c.f fc from table_a a join table_b b on a.id = b.id join table_c c on a.id = c.id')
+        self.assertEquals(query, '''
+            select a.f fa, b.f fb, c.f fc 
+            from table_a a 
+            join table_b b on a.id = b.id 
+            join table_c c on a.id = c.id''')
 
     def testSelectABCD(self):
         query = self.builder.select(['fa', 'fb', 'fc', 'fd'])
-        self.assertEquals(query, 'select a.f fa, b.f fb, c.f fc, d.f fd from table_a a join table_b b on a.id = b.id join table_c c on a.id = c.id join table_d d on c.id = d.id')
+        self.assertEquals(query, '''
+            select a.f fa, b.f fb, c.f fc, d.f fd 
+            from table_a a 
+            join table_b b on a.id = b.id 
+            join table_c c on a.id = c.id 
+            join table_d d on c.id = d.id''')
