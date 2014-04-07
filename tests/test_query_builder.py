@@ -108,6 +108,13 @@ class TestQueryBuilder(unittest.TestCase):
                 table_d d
             where a.id = b.id and a.id = c.id and c.id = d.id''')
 
+    def testWhere(self):
+        query = self.builder.where('fa = 1').select(['fa'])
+        self.assertQuery(query, '''
+            select a.f fa
+            from table_a a
+            where a.id = 1''')
+
     def assertQuery(self, q1, q2):
         q1 = re.sub('\s+', ' ', q1).strip()
         q2 = re.sub('\s+', ' ', q2).strip()
