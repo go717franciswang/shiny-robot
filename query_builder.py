@@ -126,12 +126,16 @@ class QueryBuilder:
 
     def _sub_alias_with_field(self, condition):
         # even number of quotes followed by alias-like string
-        alias_pattern = '(?:[^\']*\'[^\']*\')*(?:[^"]*"[^"]*")*([a-zA-Z]+[a-zA-Z0-9\_]*)'
+        alias_pattern = '(?:\'[^\']*\')|(?:"[^"]*")|([a-zA-Z]+[a-zA-Z0-9\_]*)'
         matches = re.finditer(alias_pattern, condition)
 
         matched = []
         for m in matches:
             alias = m.group()
+            # (?:..) noncapture group does not seem to work in re.finditer
+            if alias == '' or alias[0] == '"' or alias[0] == "'":
+                continue
+
             if alias not in self._alias_field:
                 raise Exception("Unknown alias '%s' in condition '%s'" % (alias, condition))
             matched.append(m.span())
