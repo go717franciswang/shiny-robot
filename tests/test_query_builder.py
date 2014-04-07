@@ -113,7 +113,7 @@ class TestQueryBuilder(unittest.TestCase):
         self.assertQuery(query, '''
             select a.f fa
             from table_a a
-            where a.id = 1''')
+            where a.f = 1''')
 
     def testSelectAWhereB(self):
         query = self.builder.where('fb = 1').select(['fa'])
@@ -121,7 +121,23 @@ class TestQueryBuilder(unittest.TestCase):
             select a.f fa
             from table_a a,
                 table_b b
-            where a.id = b.id and b.id = 1''')
+            where a.id = b.id and b.f = 1''')
+
+    def testWhereChainable(self):
+        query = self.builder.where('fa = 1').where('fb = 1').select(['fa'])
+        self.assertQuery(query, '''
+            select a.f fa
+            from table_a a,
+                table_b b
+            where a.id = b.id and a.f = 1 and b.f = 1''')
+
+    def testWhereReturnNewInstance(self):
+        self.builder.where('fb = 1').select(['fa'])
+        query = self.builder.where('fa = 1').select(['fa'])
+        self.assertQuery(query, '''
+            select a.f fa
+            from table_a a
+            where a.f = 1''')
 
     def assertQuery(self, q1, q2):
         q1 = re.sub('\s+', ' ', q1).strip()

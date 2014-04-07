@@ -1,4 +1,5 @@
 import re
+import copy
 
 class QueryBuilder:
     def __init__(self):
@@ -9,6 +10,7 @@ class QueryBuilder:
         self._alias_field = {}
         self._G = {}
         self._link_order = []
+        self._where_conditions = []
 
     def add_table(self, table, alias):
         if alias in self._alias_table:
@@ -36,12 +38,13 @@ class QueryBuilder:
         self._link_order.append(link)
 
     def extract_aliases(self, exp):
-        alias_pattern = '([a-zA-Z0-9\_]+)\.'
+        alias_pattern = '([a-zA-Z]+[a-zA-Z0-9\_]*)\.'
         m = re.findall(alias_pattern, exp)
         return m
 
     def select(self, aliases):
         table_aliases = self.fields2tables(aliases)
+        table_aliases = table_aliases.union(self.where2tables())
         required_table_aliases, required_links = self.get_requirements(table_aliases)
 
         select_stmt = [self._alias_field[x] + ' ' + x for x in aliases]
@@ -49,8 +52,8 @@ class QueryBuilder:
 
         query = "select " + ', '.join(select_stmt) + \
             " from " + ', '.join(from_stmt)
-        if len(required_links) > 0:
-            query += " where " + ' and '.join(required_links)
+        if len(required_links + self._where_conditions) > 0:
+            query += " where " + ' and '.join(required_links + self._where_conditions)
             
         return query
 
@@ -101,3 +104,42 @@ class QueryBuilder:
         for field in fields:
             table_aliases.add(self.extract_aliases(field)[0])
         return table_aliases
+
+    def where2tables(self):
+        table_aliases = set()
+        for x in self._where_conditions:
+            for y in self.extract_aliases(x):
+                table_aliases.add(y)
+        return table_aliases
+
+    def copy(self):
+        return copy.deepcopy(self)
+
+    def where(self, condition):
+        c = self.copy()
+        c._where(condition)
+        return c
+
+    def _where(self, condition):
+        condition = self._sub_alias_with_field(condition)
+        self._where_conditions.append(condition)
+
+    def _sub_alias_with_field(self, condition):
+        # even number of quotes followed by alias-like string
+        alias_pattern = '(?:[^\']*\'[^\']*\')*(?:[^"]*"[^"]*")*([a-zA-Z]+[a-zA-Z0-9\_]*)'
+        matches = re.finditer(alias_pattern, condition)
+
+        matched = []
+        for m in matches:
+            alias = m.group()
+            if alias not in self._alias_field:
+                raise Exception("Unknown alias '%s' in condition '%s'" % (alias, condition))
+            matched.append(m.span())
+
+        # replace from back to front so that there is not change in offset in substituted string
+        matched.reverse()
+        for s,e in matched:
+            condition = condition[:s] + self._alias_field[condition[s:e]] + condition[e:]
+
+        return condition
+
