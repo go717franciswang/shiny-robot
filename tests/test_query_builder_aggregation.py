@@ -70,11 +70,11 @@ class TestQueryBuilderAggregation(TestQueryBuilderBase):
         self.assertQuery(query, '''
             select sum(a.f1) fa
             from table_a a
-            having fa > 1'''
+            having fa > 1''')
 
         query = self.builder.group_by(['ga']).having('fa > 1').select(['fa'])
         self.assertQuery(query, '''
             select sum(a.f1) fa
             from table_a a
             group by a.f2
-            having fa > 1'''
+            having fa > 1''')

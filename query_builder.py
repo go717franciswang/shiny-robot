@@ -12,6 +12,7 @@ class QueryBuilder:
         self._link_order = []
         self._where_conditions = []
         self._group_by_fields = []
+        self._having_conditions = []
 
     def add_table(self, table, alias):
         if alias in self._alias_table:
@@ -59,6 +60,9 @@ class QueryBuilder:
 
         if len(self._group_by_fields) > 0:
             query += " group by " + ', '.join(self._group_by_fields)
+
+        if len(self._having_conditions) > 0:
+            query += " having " + ' and '.join(self._having_conditions)
             
         return query
 
@@ -170,4 +174,11 @@ class QueryBuilder:
         c._group_by(aliases)
         return c
 
+    def _having(self, condition):
+        self._having_conditions.append(condition)
+
+    def having(self, condition):
+        c = self.copy()
+        c._having(condition)
+        return c
 
