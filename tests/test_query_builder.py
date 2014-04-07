@@ -109,8 +109,8 @@ class TestQueryBuilder(unittest.TestCase):
             where a.id = b.id and a.id = c.id and c.id = d.id''')
 
     def assertQuery(self, q1, q2):
-        q1 = re.sub('\s+', ' ', q1)
-        q2 = re.sub('\s+', ' ', q2)
+        q1 = re.sub('\s+', ' ', q1).strip()
+        q2 = re.sub('\s+', ' ', q2).strip()
         # print "q1: \n" + q1
         # print "q2: \n" + q2
         self.assertEquals(q1, q2)
