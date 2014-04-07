@@ -69,6 +69,7 @@ class QueryBuilder:
         unreached = table_aliases
         links = set()
 
+        # depth first search to find links to reach every required table with minimum distance
         while len(unreached) != 0:
             t = unreached.pop()
             discovered = set()
