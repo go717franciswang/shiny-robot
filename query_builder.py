@@ -102,7 +102,8 @@ class QueryBuilder:
         fields = [self._alias_field[x] for x in aliases]
         table_aliases = set()
         for field in fields:
-            table_aliases.add(self.extract_aliases(field)[0])
+            for y in self.extract_aliases(field):
+                table_aliases.add(y)
         return table_aliases
 
     def where2tables(self):

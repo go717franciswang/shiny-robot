@@ -1,8 +1,7 @@
-import unittest
-import re
+from tests.test_query_builder_base import TestQueryBuilderBase
 from query_builder import QueryBuilder
 
-class TestQueryBuilder(unittest.TestCase):
+class TestQueryBuilder(TestQueryBuilderBase):
     def setUp(self):
         # table relationships
         self.builder = QueryBuilder()
@@ -150,8 +149,3 @@ class TestQueryBuilder(unittest.TestCase):
             select a.f fa
             from table_a a
             where a.f = 1''')
-
-    def assertQuery(self, q1, q2):
-        q1 = re.sub('\s+', ' ', q1).strip()
-        q2 = re.sub('\s+', ' ', q2).strip()
-        self.assertEquals(q1, q2)
