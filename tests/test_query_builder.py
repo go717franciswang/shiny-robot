@@ -115,6 +115,18 @@ class TestQueryBuilder(unittest.TestCase):
             from table_a a
             where a.f = 1''')
 
+        query = self.builder.where('fa = "a"').select(['fa'])
+        self.assertQuery(query, '''
+            select a.f fa
+            from table_a a
+            where a.f = "a"''')
+
+        query = self.builder.where('fa = \'a\'').select(['fa'])
+        self.assertQuery(query, '''
+            select a.f fa
+            from table_a a
+            where a.f = \'a\'''')
+
     def testSelectAWhereB(self):
         query = self.builder.where('fb = 1').select(['fa'])
         self.assertQuery(query, '''
