@@ -6,19 +6,19 @@ class TestQueryBuilder(unittest.TestCase):
         # table relationships
         self.builder = QueryBuilder()
         self.builder.add_table('table_a', 'a')
-        self.builder.alias('a.f fa')
+        self.builder.add_field('a.f', 'fa')
 
         self.builder.add_table('table_b', 'b')
         self.builder.link_tables('a.id = b.id')
-        self.builder.alias('b.f fb')
+        self.builder.add_field('b.f', 'fb')
 
         self.builder.add_table('table_c', 'c')
         self.builder.link_tables('a.id = c.id')
-        self.builder.alias('c.f fc')
+        self.builder.add_field('c.f', 'fc')
 
         self.builder.add_table('table_d', 'd')
         self.builder.link_tables('c.id = d.id')
-        self.builder.alias('d.f fd')
+        self.builder.add_field('d.f', 'fd')
 
     def testSelectA(self):
         query = self.builder.select(['fa'])
