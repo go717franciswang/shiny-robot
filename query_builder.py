@@ -5,6 +5,7 @@ class QueryBuilder:
         self._table_alias = {}
         self._alias_table = {}
         self._field_alias = {}
+        self._alias_field = {}
         self._G = {}
 
     def add_table(self, table, alias):
@@ -15,6 +16,7 @@ class QueryBuilder:
 
     def add_field(self, field, alias):
         self._field_alias[field] = alias
+        self._alias_field[alias] = field
 
     def link_tables(self, link):
         table_aliases = self.extract_aliases(link)
@@ -35,6 +37,57 @@ class QueryBuilder:
         return m
 
     def select(self, aliases):
-        """docstring for select"""
-        pass
+        table_aliases = self.fields2tables(aliases)
+        required_table_aliases, required_links = self.get_requirements(table_aliases)
 
+        select_stmt = [self._alias_field[x] + ' ' + x for x in aliases]
+        from_stmt = [self._alias_table[x] + ' ' + x for x in required_table_aliases]
+
+        query = "select " + ', '.join(select_stmt) + \
+            " from " + ', '.join(from_stmt)
+        if len(required_links) > 0:
+            query += " where " + ' and '.join(required_links)
+            
+        return query
+
+    def get_requirements(self, table_aliases):
+        s = table_aliases.pop()
+        reached = set()
+        reached.add(s)
+        unreached = table_aliases
+        discovered = set()
+        discovered.add(s)
+        links = set()
+
+        while len(unreached) != 0:
+            t = unreached.pop()
+            discovered, path = self._dfs(s, t, discovered)
+            for v in path.keys():
+                reached.add(v)
+                links.add(path[v])
+                unreached.discard(v)
+
+        return reached, links
+
+    def _dfs(self, s, t, discovered):
+        for v in self._G[s].keys():
+            if v in discovered:
+                continue
+
+            discovered.add(v)
+            if v == t:
+                return [discovered, {v: self._G[s][v]}]
+            else:
+                discovered, path = self._dfs(v, t, discovered)
+                if len(path) > 0:
+                    path[v] = self._G[s][v]
+                    return [discovered, path]
+
+        return [discovered, {}]
+
+    def fields2tables(self, aliases):
+        fields = [self._alias_field[x] for x in aliases]
+        table_aliases = set()
+        for field in fields:
+            table_aliases.add(self.extract_aliases(field)[0])
+        return table_aliases

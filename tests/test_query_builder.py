@@ -1,4 +1,5 @@
 import unittest
+import re
 from query_builder import QueryBuilder
 
 class TestQueryBuilder(unittest.TestCase):
@@ -22,79 +23,92 @@ class TestQueryBuilder(unittest.TestCase):
 
     def testSelectA(self):
         query = self.builder.select(['fa'])
-        self.assertEquals(query, 'select a.f fa from table_a a')
+        self.assertQuery(query, 'select a.f fa from table_a a')
 
     def testSelectB(self):
         query = self.builder.select(['fb'])
-        self.assertEquals(query, 'select b.f fb from table_b b')
+        self.assertQuery(query, 'select b.f fb from table_b b')
 
     def testSelectC(self):
         query = self.builder.select(['fc'])
-        self.assertEquals(query, 'select c.f fc from table_c c')
+        self.assertQuery(query, 'select c.f fc from table_c c')
 
     def testSelectD(self):
         query = self.builder.select(['fd'])
-        self.assertEquals(query, 'select d.f fd from table_d d')
+        self.assertQuery(query, 'select d.f fd from table_d d')
 
     def testSelectAB(self):
         query = self.builder.select(['fa', 'fb'])
-        self.assertEquals(query, '''
+        self.assertQuery(query, '''
             select a.f fa, b.f fb 
             from table_a a 
-            join table_b b on a.id = b.id''')
+            join table_b b 
+            where a.id = b.id''')
 
     def testSelectAC(self):
         query = self.builder.select(['fa', 'fc'])
-        self.assertEquals(query, '''
+        self.assertQuery(query, '''
             select a.f fa, c.f fc 
             from table_a a 
-            join table_c c on a.id = c.id''')
+            join table_c c 
+            where a.id = c.id''')
 
     def testSelectAD(self):
         query = self.builder.select(['fa', 'fd'])
-        self.assertEquals(query, '''
+        self.assertQuery(query, '''
             select a.f fa, d.f fd 
             from table_a a 
-            join table_c c on a.id = c.id 
-            join table_d d on c.id = d.id''')
+            join table_c c  
+            join table_d d 
+            where a.id = c.id and c.id = d.id''')
 
     def testSelectBC(self):
         query = self.builder.select(['fb', 'fc'])
-        self.assertEquals(query, '''
+        self.assertQuery(query, '''
             select b.f fb, c.f fc 
             from table_a a 
-            join table_b b on a.id = b.id 
-            join table_c c on a.id = c.id''')
+            join table_b b 
+            join table_c c 
+            where a.id = b.id and a.id = c.id''')
 
     def testSelectBD(self):
         query = self.builder.select(['fb', 'fd'])
-        self.assertEquals(query, '''
+        self.assertQuery(query, '''
             select b.f fb, d.f fd 
             from table_a a 
-            join table_b b on a.id = b.id 
-            join table_c c on a.id = c.id 
-            join table_d d on c.id = d.id''')
+            join table_b b 
+            join table_c c 
+            join table_d d 
+            where a.id = b.id and a.id = c.id and c.id = d.id''')
 
     def testSelectCD(self):
         query = self.builder.select(['fc', 'fd'])
-        self.assertEquals(query, '''
+        self.assertQuery(query, '''
             select c.f fc, d.f fd 
             from table_c c 
-            join table_d d on c.id = d.id''')
+            join table_d d 
+            where c.id = d.id''')
 
     def testSelectABC(self):
         query = self.builder.select(['fa', 'fb', 'fc'])
-        self.assertEquals(query, '''
+        self.assertQuery(query, '''
             select a.f fa, b.f fb, c.f fc 
             from table_a a 
-            join table_b b on a.id = b.id 
-            join table_c c on a.id = c.id''')
+            join table_b b 
+            join table_c c 
+            where a.id = b.id and a.id = c.id''')
 
     def testSelectABCD(self):
         query = self.builder.select(['fa', 'fb', 'fc', 'fd'])
-        self.assertEquals(query, '''
+        self.assertQuery(query, '''
             select a.f fa, b.f fb, c.f fc, d.f fd 
             from table_a a 
-            join table_b b on a.id = b.id 
-            join table_c c on a.id = c.id 
-            join table_d d on c.id = d.id''')
+            join table_b b 
+            join table_c c 
+            join table_d d 
+            where a.id = b.id and a.id = c.id and c.id = d.id''')
+
+    def assertQuery(self, q1, q2):
+        q1 = re.sub('\s+', ' ', q1)
+        q2 = re.sub('\s+', ' ', q1)
+        self.assertEquals(q1, q2)
