@@ -57,3 +57,10 @@ class TestQueryBuilderAggregation(TestQueryBuilderBase):
             where a.id = b.id
             group by concat(a.f2, b.f)''')
 
+        query = self.builder.group_by(['ga', 'cab']).select(['fa'])
+        self.assertQuery(query, '''
+            select sum(a.f1) fa
+            from table_a a,
+                table_b b
+            where a.id = b.id
+            group by a.f2, concat(a.f2, b.f)''')

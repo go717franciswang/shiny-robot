@@ -25,7 +25,7 @@ class QueryBuilder:
         self._alias_field[alias] = field
 
     def link_tables(self, link):
-        table_aliases = self.extract_aliases(link)
+        table_aliases = self._extract_aliases(link)
         if len(table_aliases) != 2:
             raise Exception("Invalid table link '%s'" % (link,))
 
@@ -38,7 +38,7 @@ class QueryBuilder:
         self._G[a2][a1] = link
         self._link_order.append(link)
 
-    def extract_aliases(self, exp):
+    def _extract_aliases(self, exp):
         alias_pattern = '([a-zA-Z]+[a-zA-Z0-9\_]*)\.'
         m = re.findall(alias_pattern, exp)
         return m
@@ -47,7 +47,7 @@ class QueryBuilder:
         table_aliases = self.fields2tables(aliases)
         table_aliases = table_aliases.union(self.where2tables())
         table_aliases = table_aliases.union(self.group_by2tables())
-        required_table_aliases, required_links = self.get_requirements(table_aliases)
+        required_table_aliases, required_links = self._get_requirements(table_aliases)
 
         select_stmt = [self._alias_field[x] + ' ' + x for x in aliases]
         from_stmt = [self._alias_table[x] + ' ' + x for x in required_table_aliases]
@@ -62,7 +62,7 @@ class QueryBuilder:
             
         return query
 
-    def get_requirements(self, table_aliases):
+    def _get_requirements(self, table_aliases):
         s = table_aliases.pop()
         reached = set()
         reached.add(s)
@@ -107,21 +107,21 @@ class QueryBuilder:
         fields = [self._alias_field[x] for x in aliases]
         table_aliases = set()
         for field in fields:
-            for y in self.extract_aliases(field):
+            for y in self._extract_aliases(field):
                 table_aliases.add(y)
         return table_aliases
 
     def where2tables(self):
         table_aliases = set()
         for x in self._where_conditions:
-            for y in self.extract_aliases(x):
+            for y in self._extract_aliases(x):
                 table_aliases.add(y)
         return table_aliases
 
     def group_by2tables(self):
         table_aliases = set()
         for x in self._group_by_fields:
-            for y in self.extract_aliases(x):
+            for y in self._extract_aliases(x):
                 table_aliases.add(y)
         return table_aliases
 
