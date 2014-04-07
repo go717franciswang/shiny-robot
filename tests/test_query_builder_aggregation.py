@@ -78,3 +78,8 @@ class TestQueryBuilderAggregation(TestQueryBuilderBase):
             from table_a a
             group by a.f2
             having fa > 1''')
+
+    def testHavingContainUnselectedAlias(self):
+        with self.assertRaisesRegexp(Exception, "alias 'cab' needs to be selected"):
+            self.builder.having('cab = "abc"').select(['fa'])
+

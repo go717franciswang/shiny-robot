@@ -62,6 +62,7 @@ class QueryBuilder:
             query += " group by " + ', '.join(self._group_by_fields)
 
         if len(self._having_conditions) > 0:
+            self._validate_having(aliases)
             query += " having " + ' and '.join(self._having_conditions)
             
         return query
@@ -143,6 +144,16 @@ class QueryBuilder:
         self._where_conditions.append(condition)
 
     def _sub_alias_with_field(self, condition):
+        matched = self._extract_alias_span(condition)
+
+        # replace from back to front so that there is not change in offset in substituted string
+        matched.reverse()
+        for s,e in matched:
+            condition = condition[:s] + self._alias_field[condition[s:e]] + condition[e:]
+
+        return condition
+
+    def _extract_alias_span(self, condition):
         # even number of quotes followed by alias-like string
         alias_pattern = '(?:\'[^\']*\')|(?:"[^"]*")|([a-zA-Z]+[a-zA-Z0-9\_]*)'
         matches = re.finditer(alias_pattern, condition)
@@ -158,12 +169,7 @@ class QueryBuilder:
                 raise Exception("Unknown alias '%s' in condition '%s'" % (alias, condition))
             matched.append(m.span())
 
-        # replace from back to front so that there is not change in offset in substituted string
-        matched.reverse()
-        for s,e in matched:
-            condition = condition[:s] + self._alias_field[condition[s:e]] + condition[e:]
-
-        return condition
+        return matched
 
     def _group_by(self, aliases):
         fields = [self._alias_field[x] for x in aliases]
@@ -181,4 +187,12 @@ class QueryBuilder:
         c = self.copy()
         c._having(condition)
         return c
+
+    def _validate_having(self, selected_aliases):
+        selected_aliases = set(selected_aliases)
+        for condition in self._having_conditions:
+            for s,e in self._extract_alias_span(condition):
+                alias = condition[s:e]
+                if alias not in selected_aliases:
+                    raise Exception("alias '%s' needs to be selected" % (alias,))
 
