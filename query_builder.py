@@ -74,7 +74,6 @@ class QueryBuilder:
                 links.add(path[v])
                 unreached.discard(v)
 
-        # print reached
         reached_sorted = [x for x in self._table_alias_order if x in reached]
         links_sorted = [x for x in self._link_order if x in links]
 
