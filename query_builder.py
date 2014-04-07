@@ -11,6 +11,7 @@ class QueryBuilder:
         self._G = {}
         self._link_order = []
         self._where_conditions = []
+        self._group_by_fields = []
 
     def add_table(self, table, alias):
         if alias in self._alias_table:
@@ -45,6 +46,7 @@ class QueryBuilder:
     def select(self, aliases):
         table_aliases = self.fields2tables(aliases)
         table_aliases = table_aliases.union(self.where2tables())
+        table_aliases = table_aliases.union(self.group_by2tables())
         required_table_aliases, required_links = self.get_requirements(table_aliases)
 
         select_stmt = [self._alias_field[x] + ' ' + x for x in aliases]
@@ -54,6 +56,9 @@ class QueryBuilder:
             " from " + ', '.join(from_stmt)
         if len(required_links + self._where_conditions) > 0:
             query += " where " + ' and '.join(required_links + self._where_conditions)
+
+        if len(self._group_by_fields) > 0:
+            query += " group by " + ', '.join(self._group_by_fields)
             
         return query
 
@@ -113,6 +118,13 @@ class QueryBuilder:
                 table_aliases.add(y)
         return table_aliases
 
+    def group_by2tables(self):
+        table_aliases = set()
+        for x in self._group_by_fields:
+            for y in self.extract_aliases(x):
+                table_aliases.add(y)
+        return table_aliases
+
     def copy(self):
         return copy.deepcopy(self)
 
@@ -147,4 +159,14 @@ class QueryBuilder:
             condition = condition[:s] + self._alias_field[condition[s:e]] + condition[e:]
 
         return condition
+
+    def _group_by(self, aliases):
+        fields = [self._alias_field[x] for x in aliases]
+        self._group_by_fields = fields
+
+    def group_by(self, aliases):
+        c = self.copy()
+        c._group_by(aliases)
+        return c
+
 

@@ -13,6 +13,7 @@ class TestQueryBuilderAggregation(TestQueryBuilderBase):
         self.builder.link_tables('a.id = b.id')
 
         self.builder.add_field('sum(a.f1) / count(b.f)', 'fab')
+        self.builder.add_field('concat(a.f2, b.f)', 'cab')
 
     def testSelectSumA(self):
         query = self.builder.select(['fa'])
@@ -35,8 +36,24 @@ class TestQueryBuilderAggregation(TestQueryBuilderBase):
             where a.id = b.id''')
 
     def testGroupBy(self):
-        query = self.builder.group_by(['ga']).select('ga', 'fa')
+        query = self.builder.group_by(['ga']).select(['ga', 'fa'])
+        self.assertQuery(query, '''
+            select a.f2 ga, sum(a.f1) fa
+            from table_a a
+            group by a.f2''')
+
+        query = self.builder.group_by(['ga']).select(['fa'])
         self.assertQuery(query, '''
             select sum(a.f1) fa
             from table_a a
             group by a.f2''')
+
+    def testGroupByFormula(self):
+        query = self.builder.group_by(['cab']).select(['fa'])
+        self.assertQuery(query, '''
+            select sum(a.f1) fa
+            from table_a a,
+                table_b b
+            where a.id = b.id
+            group by concat(a.f2, b.f)''')
+
