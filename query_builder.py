@@ -4,15 +4,18 @@ class QueryBuilder:
     def __init__(self):
         self._table_alias = {}
         self._alias_table = {}
+        self._table_alias_order = []
         self._field_alias = {}
         self._alias_field = {}
         self._G = {}
+        self._link_order = []
 
     def add_table(self, table, alias):
         if alias in self._alias_table:
             raise Exception("Alias '%s' is already used by table '%s'" % (alias, table))
         self._table_alias[table] = alias
         self._alias_table[alias] = table
+        self._table_alias_order.append(alias)
 
     def add_field(self, field, alias):
         self._field_alias[field] = alias
@@ -30,6 +33,7 @@ class QueryBuilder:
             self._G[a2] = {}
         self._G[a1][a2] = link
         self._G[a2][a1] = link
+        self._link_order.append(link)
 
     def extract_aliases(self, exp):
         alias_pattern = '([a-zA-Z0-9\_]+)\.'
@@ -55,19 +59,26 @@ class QueryBuilder:
         reached = set()
         reached.add(s)
         unreached = table_aliases
-        discovered = set()
-        discovered.add(s)
         links = set()
 
         while len(unreached) != 0:
             t = unreached.pop()
-            discovered, path = self._dfs(s, t, discovered)
+            discovered = set()
+            discovered.add(s)
+            _, path = self._dfs(s, t, discovered)
+            if t not in path:
+                raise Exception("Cannot reach table '%s'" % (t,))
+
             for v in path.keys():
                 reached.add(v)
                 links.add(path[v])
                 unreached.discard(v)
 
-        return reached, links
+        # print reached
+        reached_sorted = [x for x in self._table_alias_order if x in reached]
+        links_sorted = [x for x in self._link_order if x in links]
+
+        return reached_sorted, links_sorted
 
     def _dfs(self, s, t, discovered):
         for v in self._G[s].keys():
