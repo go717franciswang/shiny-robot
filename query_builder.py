@@ -41,8 +41,11 @@ class QueryBuilder:
 
     def _extract_aliases(self, exp):
         alias_pattern = '([a-zA-Z]+[a-zA-Z0-9\_]*)\.'
-        m = re.findall(alias_pattern, exp)
-        return m
+        try:
+            m = re.findall(alias_pattern, exp)
+            return m
+        except TypeError:
+            raise TypeError("exp '%s' needs to be string" % (exp,))
 
     def select(self, aliases):
         table_aliases = self._fields2tables(aliases)
@@ -51,10 +54,12 @@ class QueryBuilder:
         required_table_aliases, required_links = self._get_requirements(table_aliases)
 
         select_stmt = [self._alias_field[x] + ' ' + x for x in aliases]
-        from_stmt = [self._alias_table[x] + ' ' + x for x in required_table_aliases]
+        query = "select " + ', '.join(select_stmt)
 
-        query = "select " + ', '.join(select_stmt) + \
-            " from " + ', '.join(from_stmt)
+        if len(required_table_aliases) > 0:
+            from_stmt = [self._alias_table[x] + ' ' + x for x in required_table_aliases]
+            query += " from " + ', '.join(from_stmt)
+
         if len(required_links + self._where_conditions) > 0:
             query += " where " + ' and '.join(required_links + self._where_conditions)
 
@@ -68,6 +73,9 @@ class QueryBuilder:
         return query
 
     def _get_requirements(self, table_aliases):
+        if len(table_aliases) == 0:
+            return [[], []]
+
         s = table_aliases.pop()
         reached = set()
         reached.add(s)

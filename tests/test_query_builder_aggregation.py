@@ -14,6 +14,7 @@ class TestQueryBuilderAggregation(TestQueryBuilderBase):
 
         self.builder.add_field('sum(a.f1) / count(b.f)', 'fab')
         self.builder.add_field('concat(a.f2, b.f)', 'cab')
+        self.builder.add_field('0', 'c')
 
     def testSelectSumA(self):
         query = self.builder.select(['fa'])
@@ -82,4 +83,13 @@ class TestQueryBuilderAggregation(TestQueryBuilderBase):
     def testHavingContainUnselectedAlias(self):
         with self.assertRaisesRegexp(Exception, "alias 'cab' needs to be selected"):
             self.builder.having('cab = "abc"').select(['fa'])
+
+    def testSelectConstant(self):
+        query = self.builder.select(['c'])
+        self.assertQuery(query, 'select 0 c')
+
+        query = self.builder.select(['fa', 'c'])
+        self.assertQuery(query, '''
+            select sum(a.f1) fa, 0 c
+            from table_a a''')
 

@@ -149,3 +149,4 @@ class TestQueryBuilder(TestQueryBuilderBase):
             select a.f fa
             from table_a a
             where a.f = 1''')
+
