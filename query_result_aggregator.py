@@ -85,6 +85,7 @@ class QueryResultAggregator:
                 threads_completed += 1
                 if threads_completed == self._max_concurrent_queries:
                     return
+                continue
             yield rs
 
     def aggregate(self, query):
