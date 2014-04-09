@@ -69,7 +69,8 @@ class QueryResultAggregator:
         t.daemon = True
         t.start()
 
-    def _multplex(self):
+    def _multiplex(self):
+        # logic borrowed from: http://www.dabeaz.com/generators/genmulti.py
         if self._max_concurrent_queries == 1:
             self._query()
         else:
@@ -89,7 +90,7 @@ class QueryResultAggregator:
             yield rs
 
     def aggregate(self, query):
-        responses = self._multplex()
+        responses = self._multiplex()
         cursor = self._conn.cursor()
         for rs, c, q in responses:
             for row in rs:
