@@ -6,9 +6,15 @@ class TestQueryResultAggregator(unittest.TestCase):
     def setUp(self):
         self.conn = sqlite3.connect('tests/Chinook_Sqlite_AutoIncrementPKs.sqlite')
         self.a = QueryResultAggregator()
-        self.a.set_schema(['q integer'])
 
     def testAggregate(self):
+        self.a.set_schema(['q integer'])
+        self.assertSimpleAggregation()
+
+    def testAggregateNoSchema(self):
+        self.assertSimpleAggregation()
+
+    def assertSimpleAggregation(self):
         for i in range(1, 11):
             self.a.add_query(
                     'select sum(quantity) q from invoiceline where invoiceid = %d' % (i,), 
@@ -22,7 +28,6 @@ class TestQueryResultAggregator(unittest.TestCase):
         q2 = c.fetchone()[0]
 
         self.assertEquals(q, q2)
-
 
 
 

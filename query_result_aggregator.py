@@ -94,10 +94,39 @@ class QueryResultAggregator:
         cursor = self._conn.cursor()
         for rs, c, q in responses:
             for row in rs:
+                if self._insertion_query == None:
+                    self._guess_schema(c, row)
                 cursor.execute(self._insertion_query, self._norm_row(row))
             c.close()
 
         for row in cursor.execute(query):
             yield row
         cursor.close()
+
+    def _guess_schema(self, cursor, row):
+        # http://legacy.python.org/dev/peps/pep-0249/#description
+        # must use row to guess data_type b/c sqlite3 lib did not follow strictly follow DBAPI
+        schema = []
+        i = 0
+        for d in cursor.description:
+            name = d[0]
+            val = row[i]
+
+            # https://docs.python.org/2/library/sqlite3.html#introduction
+            typeof = type(val)
+            if typeof is int or typeof is long:
+                datatype = 'integer'
+            elif typeof is float or typeof is decimal.Decimal:
+                datatype = 'real'
+            elif typeof is str or typeof is unicode:
+                datatype = 'text'
+            elif typeof is buffer:
+                datatype = 'blob'
+            else:
+                datatype = 'varchar'
+
+            schema.append("%s %s" % (name, datatype))
+            i += 1
+
+        self.set_schema(schema)
 
