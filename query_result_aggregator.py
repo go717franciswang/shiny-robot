@@ -2,12 +2,15 @@ from query_builder import QueryBuilder
 from Queue import Queue
 import sqlite3
 from threading import Thread
+import decimal
+import datetime
 
 class QueryResultAggregator:
     def __init__(self):
         self._max_concurrent_queries = 1
         self._schema = None
         self._unprocessed_queries = Queue()
+        self._responses = Queue()
         self._conn = sqlite3.connect(':memory:')
         self._insertion_query = None
 
@@ -38,16 +41,14 @@ class QueryResultAggregator:
 
     def _query(self):
         while True:
+            if self._unprocessed_queries.empty():
+                self._responses.put(StopIteration)
+                return
+
             q, conn = self._unprocessed_queries.get()
             c = conn.cursor()
             rs = c.execute(q)
-
-            # start the next query as soon as this one completes
-            self._start_query()
-
-            for row in rs:
-                c.execute(q, self._norm_row(row))
-            c.close()
+            self._responses.put((rs, c, q))
             self._unprocessed_queries.task_done()
 
     def _norm_row(self, row):
@@ -68,10 +69,33 @@ class QueryResultAggregator:
         t.daemon = True
         t.start()
 
-    def aggregate(self, query):
-        for i in range(self._max_concurrent_queries):
-            self._start_query()
+    def _multplex(self):
+        if self._max_concurrent_queries == 1:
+            self._query()
+        else:
+            for i in range(self._max_concurrent_queries):
+                t = Thread(target=self._query)
+                t.daemon = True
+                t.start()
 
-        self._unprocessed_queries.join()
-        c = self._conn.cursor()
-        return c.execute(query)
+        threads_completed = 0
+        while True:
+            rs = self._responses.get()
+            if rs == StopIteration:
+                threads_completed += 1
+                if threads_completed == self._max_concurrent_queries:
+                    return
+            yield rs
+
+    def aggregate(self, query):
+        responses = self._multplex()
+        cursor = self._conn.cursor()
+        for rs, c, q in responses:
+            for row in rs:
+                cursor.execute(self._insertion_query, self._norm_row(row))
+            c.close()
+
+        for row in cursor.execute(query):
+            yield row
+        cursor.close()
+
