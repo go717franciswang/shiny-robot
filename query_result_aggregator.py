@@ -93,6 +93,11 @@ class QueryResultAggregator:
         responses = self._multiplex()
         cursor = self._conn.cursor()
         for rs, c, q in responses:
+            if self._insertion_query != None:
+                if len(c.description) != len(self._schema):
+                    raise Exception("expected %d columns, got %d columns from %s" \
+                            % (len(self._schema), len(c.description), q))
+
             for row in rs:
                 if self._insertion_query == None:
                     self._guess_schema(c, row)

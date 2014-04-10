@@ -29,6 +29,15 @@ class TestQueryResultAggregator(unittest.TestCase):
 
         self.assertEquals(q, q2)
 
+    def testInconsistentNumberOfColumnsError(self):
+        self.a.add_query('select sum(quantity) q from invoiceline where invoiceid = 1', self.conn)
+        self.a.add_query('''
+            select sum(quantity) q, sum(unitprice * quantity) c
+            from invoiceline 
+            where invoiceid = 2''', self.conn)
+        with self.assertRaisesRegexp(Exception, "expected \d columns, got \d columns from .*"):
+            self.a.aggregate('select sum(q) from tmp').next()
+
 
 
 
