@@ -21,7 +21,33 @@ class QueryBuilder:
         self._alias_table[alias] = table
         self._table_alias_order.append(alias)
 
+    def add_table_with_fields(self, table, alias, conn):
+        self._add_table_with_fields_sqlite3(self, table, alias, conn)
+
+    def _add_table_with_fields_sqlite3(self, table, alias, conn):
+        try:
+            import sqlite3
+            if conn.__class__ is sqlite3.Connection:
+                c = conn.cursor()
+                rs = c.execute('pragma table_info(%s)' % (table,))
+
+                self.add_table(table, alias)
+                for row in rs:
+                    name = row[1]
+                    field = '%s.%s' % (alias, name)
+                    self.add_field(field, name)
+
+                c.close()
+                return True
+        except ImportError, e:
+            pass
+
+        return False
+
     def add_field(self, field, alias):
+        field = field.lower()
+        alias = alias.lower()
+
         self._field_alias[field] = alias
         self._alias_field[alias] = field
 
