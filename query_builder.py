@@ -27,7 +27,7 @@ class QueryBuilder:
     def _add_table_with_fields_sqlite3(self, table, alias, conn):
         try:
             import sqlite3
-            if conn.__class__ is sqlite3.Connection:
+            if isinstance(conn, sqlite3.Connection):
                 c = conn.cursor()
                 rs = c.execute('pragma table_info(%s)' % (table,))
 

@@ -1,0 +1,11 @@
+[mysql]
+host=
+port=
+user=
+passwd=
+
+[postgresql]
+host=
+port=
+user=
+passwd=
