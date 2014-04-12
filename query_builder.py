@@ -22,7 +22,7 @@ class QueryBuilder:
         self._table_alias_order.append(alias)
 
     def add_table_with_fields(self, table, alias, conn):
-        self._add_table_with_fields_sqlite3(self, table, alias, conn)
+        self._add_table_with_fields_sqlite3(table, alias, conn)
 
     def _add_table_with_fields_sqlite3(self, table, alias, conn):
         try:
