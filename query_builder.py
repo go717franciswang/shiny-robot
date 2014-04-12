@@ -145,13 +145,13 @@ class QueryBuilder:
 
     def _fields2tables(self, aliases):
         table_aliases = set()
-        fields = []
         for x in aliases:
             if x not in self._alias_field:
                 raise Exception("Cannot recognize alias: '%s'" % (x,))
             field = self._alias_field[x]
             for y in self._extract_aliases(field):
                 table_aliases.add(y)
+
         return table_aliases
 
     def _where2tables(self):
