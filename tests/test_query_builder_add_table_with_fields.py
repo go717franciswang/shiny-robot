@@ -26,7 +26,7 @@ class TestQueryBuilderAddTableWithFields(TestQueryBuilderBase):
         c = conn.cursor()
         c.execute('drop table if exists test.album')
         c.execute('''create table if not exists test.album
-            (AlbumId int, Title varchar(100), ArtistId int);''')
+            (AlbumId int, Title varchar(100), ArtistId int)''')
         c.close()
         builder.add_table_with_fields('test.album', 'a', conn)
         query = builder.select(['albumid', 'artistid'])
@@ -35,17 +35,17 @@ class TestQueryBuilderAddTableWithFields(TestQueryBuilderBase):
     def testPostgresql(self):
         import psycopg2
         builder = QueryBuilder()
-        conn = psycopg2.connect("dbname=%s port=%s user=%s password=%s" % ( \
+        conn = psycopg2.connect("dbname=test host=%s port=%s user=%s password=%s" % ( \
                 self.config.get('postgresql', 'host'),
                 self.config.get('postgresql', 'port'),
                 self.config.get('postgresql', 'user'),
                 self.config.get('postgresql', 'passwd')))
         c = conn.cursor()
-        c.execute('drop table if exists test.album')
-        c.execute('''create table if not exists test.album
-            (AlbumId int, Title varchar(100), ArtistId int);''')
+        c.execute('drop table if exists album')
+        c.execute('''create table album
+            (AlbumId int, Title char(100), ArtistId int)''')
         c.close()
-        builder.add_table_with_fields('test.album', 'a', conn)
+        builder.add_table_with_fields('album', 'a', conn)
         query = builder.select(['albumid', 'artistid'])
-        self.assertQuery(query, 'select a.albumid albumid, a.artistid artistid from test.album a')
+        self.assertQuery(query, 'select a.albumid albumid, a.artistid artistid from album a')
 
