@@ -23,7 +23,8 @@ class QueryBuilder:
 
     def add_table_with_fields(self, table, alias, conn):
         self._add_table_with_fields_sqlite3(table, alias, conn) or \
-                self._add_table_with_fields_mysql(table, alias, conn)
+                self._add_table_with_fields_mysql(table, alias, conn) or \
+                self._add_table_with_fields_postgresql(table, alias, conn)
 
 
     def _add_table_with_fields_sqlite3(self, table, alias, conn):
@@ -52,6 +53,28 @@ class QueryBuilder:
             if isinstance(conn, mysql.connector.connection.MySQLConnection):
                 c = conn.cursor()
                 c.execute('describe %s' % (table,))
+
+                self.add_table(table, alias)
+                for row in c.fetchall():
+                    name = row[0]
+                    field = '%s.%s' % (alias, name)
+                    self.add_field(field, name)
+
+                c.close()
+                return True
+        except ImportError, e:
+            pass
+
+        return False
+
+    def _add_table_with_fields_postgresql(self, table, alias, conn):
+        try:
+            import psycopg2
+            if isinstance(conn, psycopg2._psycopg.connection):
+                c = conn.cursor()
+                c.execute("""select column_name 
+                    from information_schema.columns 
+                    where table_name = '%s'""" % (table,))
 
                 self.add_table(table, alias)
                 for row in c.fetchall():
