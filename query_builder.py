@@ -22,7 +22,9 @@ class QueryBuilder:
         self._table_alias_order.append(alias)
 
     def add_table_with_fields(self, table, alias, conn):
-        self._add_table_with_fields_sqlite3(table, alias, conn)
+        self._add_table_with_fields_sqlite3(table, alias, conn) or \
+                self._add_table_with_fields_mysql(table, alias, conn)
+
 
     def _add_table_with_fields_sqlite3(self, table, alias, conn):
         try:
@@ -34,6 +36,26 @@ class QueryBuilder:
                 self.add_table(table, alias)
                 for row in rs:
                     name = row[1]
+                    field = '%s.%s' % (alias, name)
+                    self.add_field(field, name)
+
+                c.close()
+                return True
+        except ImportError, e:
+            pass
+
+        return False
+
+    def _add_table_with_fields_mysql(self, table, alias, conn):
+        try:
+            import mysql.connector
+            if isinstance(conn, mysql.connector.connection.MySQLConnection):
+                c = conn.cursor()
+                c.execute('describe %s' % (table,))
+
+                self.add_table(table, alias)
+                for row in c.fetchall():
+                    name = row[0]
                     field = '%s.%s' % (alias, name)
                     self.add_field(field, name)
 
