@@ -1,5 +1,8 @@
-from query_builder import QueryBuilder
-from Queue import Queue
+try:
+    from Queue import Queue
+except ImportError:
+    from queue import Queue
+
 import sqlite3
 from threading import Thread
 import decimal
