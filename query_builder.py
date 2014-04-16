@@ -42,7 +42,7 @@ class QueryBuilder:
 
                 c.close()
                 return True
-        except ImportError, e:
+        except ImportError as e:
             pass
 
         return False
@@ -62,7 +62,7 @@ class QueryBuilder:
 
                 c.close()
                 return True
-        except ImportError, e:
+        except ImportError as e:
             pass
 
         return False
@@ -84,7 +84,7 @@ class QueryBuilder:
 
                 c.close()
                 return True
-        except ImportError, e:
+        except ImportError as e:
             pass
 
         return False
