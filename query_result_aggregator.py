@@ -101,7 +101,7 @@ class QueryResultAggregator:
                     raise Exception("expected %d columns, got %d columns from %s" \
                             % (len(self._schema), len(c.description), q))
 
-            for row in rs:
+            for row in c.fetchall():
                 if self._insertion_query == None:
                     self._guess_schema(c, row)
                 cursor.execute(self._insertion_query, self._norm_row(row))
@@ -116,13 +116,15 @@ class QueryResultAggregator:
         # must use row to guess data_type b/c sqlite3 lib did not follow strictly follow DBAPI
         schema = []
         i = 0
+        is_python2 = 'long' in dir(__builtins__)
+
         for d in cursor.description:
             name = d[0]
             val = row[i]
 
             # https://docs.python.org/2/library/sqlite3.html#introduction
             typeof = type(val)
-            if typeof is int or typeof is long:
+            if typeof is int or (is_python2 and typeof is long):
                 datatype = 'integer'
             elif typeof is float or typeof is decimal.Decimal:
                 datatype = 'real'
